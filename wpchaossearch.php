@@ -373,9 +373,13 @@ class WPChaosSearch {
 		}
 		WPChaosClient::reset_object();
 
+		//$tags = array_map('strval',$tags);
+		$tags = array_unique($tags);
+
 		$sep = '';
 		$result = '';
 		while($number_of_tags > 0 && $tags) {
+
 			$tag = array_splice($tags, rand(0,count($tags)-1), 1);
 			$tag = $tag[0];
 
