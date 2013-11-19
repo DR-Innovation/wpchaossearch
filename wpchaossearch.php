@@ -182,7 +182,7 @@ class WPChaosSearch {
 	 * @param  boolean $escape    
 	 * @return string             
 	 */
-	public static function get_search_var($query_key, $escape = false, $urldecode = true) {
+	public static function get_search_var($query_key, $escape = false, $urldecode = true, $default = '') {
 		$query_vars = self::get_search_vars($urldecode);
 		if(array_key_exists($query_key, $query_vars)) {
 			if($escape !== false) {
@@ -200,7 +200,7 @@ class WPChaosSearch {
 				return $query_vars[$query_key];
 			}
 		} else {
-			return '';
+			return $default;
 		}
 	}
 
@@ -217,9 +217,9 @@ class WPChaosSearch {
 			$this->generate_searchresults();
 
 			//Get current page number
-			$page = WPChaosSearch::get_search_var(WPChaosSearch::QUERY_KEY_PAGE)?:1;
+			$page = WPChaosSearch::get_search_var(WPChaosSearch::QUERY_KEY_PAGE, false, true, 1);
 			//Get objects per page
-			$objects = get_option("wpchaos-searchsize")?:20;
+			$objects = get_option("wpchaos-searchsize",20);
 			//Get max page number
 			$max_page = ceil(WPChaosSearch::get_search_results()->MCM()->TotalCount()/$objects);
 
@@ -289,13 +289,12 @@ class WPChaosSearch {
 		$args = wp_parse_args($args, array(
 			'query' => "",
 			'pageindex' => self::get_search_var(self::QUERY_KEY_PAGE, 'intval')-1,
-			'pagesize' => get_option("wpchaos-searchsize"),
+			'pagesize' => get_option("wpchaos-searchsize",20),
 			'sort' => self::get_search_var(self::QUERY_KEY_SORT),
 			'accesspoint' => null
 		));
 		extract($args, EXTR_SKIP);	
 
-		$pagesize = ($pagesize?:20);
 		$pageindex = ($pageindex >= 0?$pageindex:0);
 
 		$sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
@@ -621,7 +620,7 @@ class WPChaosSearch {
 		//Get current page number
 		$page = self::get_search_var(self::QUERY_KEY_PAGE)?:1;
 		//Get objects per page
-		$objects = get_option("wpchaos-searchsize")?:20;
+		$objects = get_option("wpchaos-searchsize", 20);
 		//Get max page number
 		$max_page = ceil(self::get_search_results()->MCM()->TotalCount()/$objects);
 		
