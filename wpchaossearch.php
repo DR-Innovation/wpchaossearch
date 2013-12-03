@@ -28,6 +28,8 @@ class WPChaosSearch {
 	
 	const FLUSH_REWRITE_RULES_OPTION_KEY = 'wpchaos-flush-rewrite-rules';
 
+	const FILTER_PREPARE_RESULTS = 'wpchaossearch-prepare';
+
 	public static $search_results;
 
 	/**
@@ -567,7 +569,7 @@ class WPChaosSearch {
 	 * @return void
 	 */
 	public static function set_search_results($search_results) {
-		self::$search_results = $search_results;
+		self::$search_results = apply_filters(self::FILTER_PREPARE_RESULTS,$search_results);
 	}
 
 	/**
