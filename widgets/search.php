@@ -8,14 +8,8 @@
  * WordPress Widget that display a search form
  * to be used with CHAOS
  */
-class WPChaos_Search_Widget extends WP_Widget {
-
-	/**
-	 * Fields in widget. Defines keys for values
-	 * @var array
-	 */
-	private $fields;
-
+class WPChaos_Search_Widget extends WPChaosWidget {
+	
 	/**
 	 * Constructor
 	 */
@@ -55,40 +49,6 @@ class WPChaos_Search_Widget extends WP_Widget {
 		WPChaosSearch::create_search_form($instance['placeholder']);
 		
 		echo $args['after_widget'];
-	}
-
-	/**
-	 * GUI for widget form in the administration
-	 * 
-	 * @param  array $instance Widget values from database
-	 * @return void           
-	 */
-	public function form( $instance ) {
-		
-		foreach($this->fields as $field) {
-			$title = isset( $instance[ $field['name'] ]) ? $instance[ $field['name'] ] : "";
-			echo '<p>';
-			echo '<label for="'.$this->get_field_name( $field['name'] ).'">'.$field['title'].'</label>';
-			echo '<input class="widefat" id="'.$this->get_field_id( $field['name'] ).'" name="'.$this->get_field_name( $field['name'] ).'" type="text" value="'.esc_attr( $title ).'" />';
-			echo '</p>';
-		}
-	}
-
-	/**
-	 * Callback for whenever the widget values should be saved
-	 * 
-	 * @param  array $new_instance New values from the form
-	 * @param  array $old_instance Previously saved values
-	 * @return array               Values to be saved
-	 */
-	public function update( $new_instance, $old_instance ) {
-
-		$instance = array();
-		foreach($this->fields as $field) {
-			$instance[$field['name']] = ( ! empty( $new_instance[$field['name']] ) ) ? strip_tags( $new_instance[$field['name']] ) : '';
-		}
-
-		return $instance;
 	}
 
 }
