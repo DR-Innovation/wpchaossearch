@@ -300,7 +300,24 @@ class WPChaosSearch {
 		$pageindex = ($pageindex >= 0?$pageindex:0);
 
 		$sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
-		$query = apply_filters('wpchaos-solr-query', $query, self::get_search_vars());
+
+		/* 
+		* Search settings with AND operator, which means that the search results must contain all the words.
+		* Ex. Dronning Margrethe is Dronning AND Margrethe.
+		*
+		*/
+		// Search string is splitted by spaces.
+		$search_vars = self::get_search_vars();
+		$search = explode(' ', $search_vars['text']);
+		$arr_query = array();
+		// Loops through every search word and adds the query to an array.
+		foreach ($search as $s) {
+			$search_vars['text'] = $s;
+			$arr_query[] = '(' . apply_filters('wpchaos-solr-query', $query, $search_vars) . ')';
+
+		}
+		// Implodes with AND between every query from the loop.
+		$query = implode(' AND ', $arr_query);		
 		
 		self::set_search_results(WPChaosClient::instance()->Object()->Get(
 			$query,	// Search query
@@ -313,6 +330,33 @@ class WPChaosSearch {
 			true	// includeObjectRelations
 		));
 	}
+	/*public function generate_searchresults($args = array()) {
+		// Grab args or defaults
+		$args = wp_parse_args($args, array(
+			'query' => "",
+			'pageindex' => self::get_search_var(self::QUERY_KEY_PAGE, 'intval')-1,
+			'pagesize' => get_option("wpchaos-searchsize",20),
+			'sort' => self::get_search_var(self::QUERY_KEY_SORT),
+			'accesspoint' => null
+		));
+		extract($args, EXTR_SKIP);	
+
+		$pageindex = ($pageindex >= 0?$pageindex:0);
+
+		$sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
+		$query = apply_filters('wpchaos-solr-query', $query, self::get_search_vars());
+		
+		self::set_search_results(WPChaosClient::instance()->Object()->Get(
+			$query,	// Search query
+			$sort,	// Sort
+			$accesspoint,	// AccessPoint given by settings.
+			$pageindex,		// pageIndex
+			$pagesize,		// pageSize
+			true,	// includeMetadata
+			true,	// includeFiles
+			true	// includeObjectRelations
+		));
+	}*/
 	
 	public static function generate_facet($facet_field, $exclude_query_var = null) {
 		$variables = self::get_search_vars();
