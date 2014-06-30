@@ -341,7 +341,8 @@ class WPChaosSearch {
 			true,	// includeMetadata
 			true,	// includeFiles
 			true,	// includeObjectRelations
-			true 	// includeAccessPoints
+			true, 	// includeAccessPoints
+			true 	// POST instead of GET
 		));
 	}
 	/*public function generate_searchresults($args = array()) {
