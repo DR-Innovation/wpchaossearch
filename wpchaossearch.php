@@ -312,25 +312,16 @@ class WPChaosSearch {
 		// Search string is splitted by spaces.
 		$search_vars = self::get_search_vars();
 		$search = explode(' ', $search_vars['text']);
-		//$search[] = '-"Uden titel"';
 		$arr_query = array();
-		$arr_no_query = array();
 		
 		// Loops through every search word and adds the query to an array.
 		foreach ($search as $s) {
 			$search_vars['text'] = $s;
 			$arr_query[] = '(' . apply_filters('wpchaos-solr-query', $query, $search_vars) . ')';
-
 		}
-		/*$no_search = array("-(Materiale uden titel)", "-(Uden titel)");
-		foreach ($no_search as $s) {
-			$search_vars['text'] = $s;
-			$arr_no_query[] = '(' . apply_filters('wpchaos-solr-query', $query, $search_vars) . ')';
-		}*/
-		//$arr_query[] = '(DKA-Crowd-Slug_string:&#33;%22Uden-title%22+AND+DKA-Crowd-Slug_string:&#33;%22Uden-title%22)';
 		
 		// Implodes with AND between every query from the loop.
-		$query = /*'(' . implode(' AND ', $arr_no_query) . ') AND ' . */implode(' AND ', $arr_query);
+		$query = implode(' AND ', $arr_query);
 		
 		self::set_search_results(WPChaosClient::instance()->Object()->Get(
 			$query,	// Search query
