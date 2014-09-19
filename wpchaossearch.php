@@ -22,6 +22,7 @@ class WPChaosSearch {
 	const QUERY_KEY_PAGE = 'side';
 	const QUERY_KEY_VIEW = 'som';
 	const QUERY_KEY_SORT = 'sorteret-efter';
+	const QUERY_KEY_ONLY_PUBLISHED = 'vis-kun';
 	
 	const QUERY_PREFIX_CHAR = '-';
 	const QUERY_DEFAULT_POST_SEPERATOR = '-';
@@ -68,6 +69,7 @@ class WPChaosSearch {
 			WPChaosSearch::register_search_query_variable(4, WPChaosSearch::QUERY_KEY_VIEW, '[^/&]+?', true);
 			WPChaosSearch::register_search_query_variable(5, WPChaosSearch::QUERY_KEY_SORT, '[^/&]+?', true);
 			WPChaosSearch::register_search_query_variable(6, WPChaosSearch::QUERY_KEY_PAGE, '\d+?', true);
+			WPChaosSearch::register_search_query_variable(7, WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED, '[^/&]+?', true);
 			
 			// Rewrite tags and rules should always be added.
 			add_action('init', array('WPChaosSearch', 'handle_rewrite_rules'));
@@ -240,6 +242,12 @@ class WPChaosSearch {
 
 			add_action('wp_head', function() {
 				$link = WPChaosSearch::generate_pretty_search_url(array(
+					WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED => null,
+				));
+			});
+
+			add_action('wp_head', function() {
+				$link = WPChaosSearch::generate_pretty_search_url(array(
 					WPChaosSearch::QUERY_KEY_VIEW => null,
 				));
 				echo '<link rel="canonical" href="'.$link.'" />'."\n";
@@ -293,17 +301,17 @@ class WPChaosSearch {
 			'pageindex' => self::get_search_var(self::QUERY_KEY_PAGE, 'intval')-1,
 			'pagesize' => get_option("wpchaos-searchsize",20),
 			'sort' => self::get_search_var(self::QUERY_KEY_SORT),
+			'view_unpublish' => self::get_search_var(self::QUERY_KEY_ONLY_PUBLISHED),
 			'accesspoint' => null
 		));
 		extract($args, EXTR_SKIP);
-		if (current_user_can(WPDKA::PUBLISH_STATE_CAPABILITY)) {
+		if (current_user_can(WPDKA::PUBLISH_STATE_CAPABILITY) && !$view_unpublish) {
 			$accesspoint = false;
 		}
 
 		$pageindex = ($pageindex >= 0?$pageindex:0);
 
 		$sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
-
 		/* 
 		* Search settings with AND operator, which means that the search results must contain all the words.
 		* Ex. Dronning Margrethe is Dronning AND Margrethe.
@@ -313,7 +321,6 @@ class WPChaosSearch {
 		$search_vars = self::get_search_vars();
 		$search = explode(' ', $search_vars['text']);
 		$arr_query = array();
-		
 		// Loops through every search word and adds the query to an array.
 		foreach ($search as $s) {
 			$search_vars['text'] = $s;
