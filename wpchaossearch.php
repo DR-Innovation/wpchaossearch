@@ -177,6 +177,7 @@ class WPChaosSearch {
 				$variables[$variable['key']] = $variable['default_value'];
 			}
 		}
+		$variables['text'] = substr($variables['text'], 0, 100); // To make sure the URL does not exceed maximum
 		return $variables;
 	}
 	
