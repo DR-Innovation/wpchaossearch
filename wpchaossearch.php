@@ -77,7 +77,7 @@ class WPChaosSearch {
       WPChaosSearch::register_search_query_variable(7, WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED,
         '[^/&]+?', true);
       WPChaosSearch::register_search_query_variable(8, WPChaosSearch::QUERY_KEY_DATE_RANGE,
-        '(\d{2}-\d{2}-\d{4})-til-(\d{2}-\d{2}-\d{4})', true);
+        '[^/&]+?', true, '-til-');
 
       // Rewrite tags and rules should always be added.
       add_action('init', array('WPChaosSearch', 'handle_rewrite_rules'));
@@ -339,13 +339,11 @@ class WPChaosSearch {
     }
 
     // Add date range to the filter
-    if ($args['date_range'] !== "") {
-      preg_match('/^(\d{2})-(\d{2})-(\d{4})-til-(\d{2})-(\d{2})-(\d{4})$/',
-        $args['date_range'], $matches);
-      $date_from = $matches[3] .'-'. $matches[2] .'-'. $matches[1] . 'T00:00:00Z';
-      $date_to = $matches[6] .'-'. $matches[5] .'-'. $matches[4] . 'T00:00:00Z';
-      print_r($date_from);
-      print_r($date_to);
+    if (count($args['date_range']) > 0) {
+      $dates = $args['date_range'];
+
+      $date_from = ensure_ymd_format($dates[0]) . 'T00:00:00Z';
+      $date_to = ensure_ymd_format($dates[1]) . 'T00:00:00Z';
       $arr_query[] = '(DKA-FirstPublishedDate_date:['. $date_from .
         ' TO ' . $date_to . '])';
     }
@@ -760,6 +758,17 @@ class WPChaosSearch {
   }
 
 }
+
+function ensure_ymd_format($date) {
+  $parts = preg_split('/[-\/]/', $date);
+  if (strlen($parts[0]) === 4) {
+    return $parts[0] .'-'. $parts[1] .'-'. $parts[2];
+  } else if (strlen($parts[2]) === 4) {
+    return $parts[2] .'-'. $parts[1] .'-'. $parts[0];
+  }
+  return null;
+}
+
 
 register_activation_hook(__FILE__, array('WPChaosSearch', 'install'));
 register_deactivation_hook(__FILE__, array('WPChaosSearch', 'uninstall'));
