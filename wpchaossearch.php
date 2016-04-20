@@ -341,11 +341,15 @@ class WPChaosSearch {
     // Add date range to the filter
     if (count($args['date_range']) > 0) {
       $dates = $args['date_range'];
-
       $date_from = ensure_ymd_format($dates[0]) . 'T00:00:00Z';
       $date_to = ensure_ymd_format($dates[1]) . 'T00:00:00Z';
       $arr_query[] = '(DKA-FirstPublishedDate_date:['. $date_from .
         ' TO ' . $date_to . '])';
+
+      // Log the date search to a file
+      $entry = ensure_ymd_format($dates[0]) . ';'. ensure_ymd_format($dates[1]);
+      $path = dirname(__FILE__) . '/date-searches.csv';
+      file_put_contents($path, PHP_EOL . $entry, FILE_APPEND);
     }
 
     // Implodes with AND between every query from the loop.
