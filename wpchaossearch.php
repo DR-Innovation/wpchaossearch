@@ -338,6 +338,7 @@ class WPChaosSearch {
       $arr_query[] = '(' . apply_filters('wpchaos-solr-query', $query, $search_vars) . ')';
     }
 
+    // Add date range to the filter
     if ($args['date_range'] !== "") {
       preg_match('/^(\d{2})-(\d{2})-(\d{4})-til-(\d{2})-(\d{2})-(\d{4})$/',
         $args['date_range'], $matches);
