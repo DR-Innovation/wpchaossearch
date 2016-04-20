@@ -23,6 +23,7 @@ class WPChaosSearch {
   const QUERY_KEY_VIEW = 'som';
   const QUERY_KEY_SORT = 'sorteret-efter';
   const QUERY_KEY_ONLY_PUBLISHED = 'vis-kun';
+  const QUERY_KEY_DATE_RANGE = 'mellem';
 
   const QUERY_PREFIX_CHAR = '-';
   const QUERY_DEFAULT_POST_SEPERATOR = '-';
@@ -65,11 +66,18 @@ class WPChaosSearch {
       add_action('widgets_init', array(&$this, 'register_widgets'));
       add_action('template_redirect', array(&$this, 'get_search_page'));
 
-      WPChaosSearch::register_search_query_variable(1, WPChaosSearch::QUERY_KEY_FREETEXT, '[^/&]*?', false, null, '', '/');
-      WPChaosSearch::register_search_query_variable(4, WPChaosSearch::QUERY_KEY_VIEW, '[^/&]+?', true);
-      WPChaosSearch::register_search_query_variable(5, WPChaosSearch::QUERY_KEY_SORT, '[^/&]+?', true);
-      WPChaosSearch::register_search_query_variable(6, WPChaosSearch::QUERY_KEY_PAGE, '\d+?', true);
-      WPChaosSearch::register_search_query_variable(7, WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED, '[^/&]+?', true);
+      WPChaosSearch::register_search_query_variable(1, WPChaosSearch::QUERY_KEY_FREETEXT,
+        '[^/&]*?', false, null, '', '/');
+      WPChaosSearch::register_search_query_variable(4, WPChaosSearch::QUERY_KEY_VIEW,
+        '[^/&]+?', true);
+      WPChaosSearch::register_search_query_variable(5, WPChaosSearch::QUERY_KEY_SORT,
+        '[^/&]+?', true);
+      WPChaosSearch::register_search_query_variable(6, WPChaosSearch::QUERY_KEY_PAGE,
+        '\d+?', true);
+      WPChaosSearch::register_search_query_variable(7, WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED,
+        '[^/&]+?', true);
+      WPChaosSearch::register_search_query_variable(8, WPChaosSearch::QUERY_KEY_DATE_RANGE,
+        '(\d{2}-\d{2}-\d{4})-til-(\d{2}-\d{2}-\d{4})', true);
 
       // Rewrite tags and rules should always be added.
       add_action('init', array('WPChaosSearch', 'handle_rewrite_rules'));
@@ -305,8 +313,10 @@ class WPChaosSearch {
       'pagesize' => get_option("wpchaos-searchsize",20),
       'sort' => self::get_search_var(self::QUERY_KEY_SORT),
       'view_unpublish' => self::get_search_var(self::QUERY_KEY_ONLY_PUBLISHED),
+      'date_range' => self::get_search_var(self::QUERY_KEY_DATE_RANGE),
       'accesspoint' => null
     ));
+
     extract($args, EXTR_SKIP);
     if (current_user_can(WPDKA::PUBLISH_STATE_CAPABILITY) && !$view_unpublish) {
       $accesspoint = false;
@@ -315,11 +325,9 @@ class WPChaosSearch {
     $pageindex = ($pageindex >= 0?$pageindex:0);
 
     $sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
-    /*
-    * Search settings with AND operator, which means that the search results must contain all the words.
-    * Ex. Dronning Margrethe is Dronning AND Margrethe.
-    *
-    */
+
+    // Search settings with AND operator, which means that the search results must contain all the words.
+    // Ex. Dronning Margrethe is Dronning AND Margrethe.
     // Search string is splitted by spaces.
     $search_vars = self::get_search_vars();
     $search = explode(' ', $search_vars['text']);
@@ -328,6 +336,17 @@ class WPChaosSearch {
     foreach ($search as $s) {
       $search_vars['text'] = $s;
       $arr_query[] = '(' . apply_filters('wpchaos-solr-query', $query, $search_vars) . ')';
+    }
+
+    if ($args['date_range'] !== "") {
+      preg_match('/^(\d{2})-(\d{2})-(\d{4})-til-(\d{2})-(\d{2})-(\d{4})$/',
+        $args['date_range'], $matches);
+      $date_from = $matches[3] .'-'. $matches[2] .'-'. $matches[1] . 'T00:00:00Z';
+      $date_to = $matches[6] .'-'. $matches[5] .'-'. $matches[4] . 'T00:00:00Z';
+      print_r($date_from);
+      print_r($date_to);
+      $arr_query[] = '(DKA-FirstPublishedDate_date:['. $date_from .
+        ' TO ' . $date_to . '])';
     }
 
     // Implodes with AND between every query from the loop.
@@ -346,33 +365,6 @@ class WPChaosSearch {
       true 	// POST instead of GET
     ));
   }
-  /*public function generate_searchresults($args = array()) {
-    // Grab args or defaults
-    $args = wp_parse_args($args, array(
-      'query' => "",
-      'pageindex' => self::get_search_var(self::QUERY_KEY_PAGE, 'intval')-1,
-      'pagesize' => get_option("wpchaos-searchsize",20),
-      'sort' => self::get_search_var(self::QUERY_KEY_SORT),
-      'accesspoint' => null
-    ));
-    extract($args, EXTR_SKIP);
-
-    $pageindex = ($pageindex >= 0?$pageindex:0);
-
-    $sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
-    $query = apply_filters('wpchaos-solr-query', $query, self::get_search_vars());
-
-    self::set_search_results(WPChaosClient::instance()->Object()->Get(
-      $query,	// Search query
-      $sort,	// Sort
-      $accesspoint,	// AccessPoint given by settings.
-      $pageindex,		// pageIndex
-      $pagesize,		// pageSize
-      true,	// includeMetadata
-      true,	// includeFiles
-      true	// includeObjectRelations
-    ));
-  }*/
 
   public static function generate_facet($facet_field, $exclude_query_var = null) {
     $variables = self::get_search_vars();
