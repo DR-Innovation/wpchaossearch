@@ -548,7 +548,8 @@ class WPChaosSearch {
       if(empty($value) && $variable['default_value'] != null) {
         $value = $variable['default_value'];
       }
-      if($value) {
+      if($value && !is_array($value) ||
+        is_array($value) && count(array_filter($value)) > 0) {
         if(is_array($value)) {
           $value = implode($variable['multivalue-seperator'], $value);
         }
