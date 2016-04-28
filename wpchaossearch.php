@@ -58,8 +58,6 @@ class WPChaosSearch {
         add_action('chaos-settings-updated', array('WPChaosSearch', 'flush_rewrite_rules_soon'));
 
         add_filter('wpchaos-config', array(&$this, 'settings'));
-
-
       }
 
       add_action('plugins_loaded',array(&$this,'load_textdomain'));
@@ -76,8 +74,9 @@ class WPChaosSearch {
         '\d+?', true);
       WPChaosSearch::register_search_query_variable(7, WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED,
         '[^/&]+?', true);
-      WPChaosSearch::register_search_query_variable(8, WPChaosSearch::QUERY_KEY_DATE_RANGE,
+      self::register_search_query_variable(8, self::QUERY_KEY_DATE_RANGE,
         '[^/&]+?', true, '-til-');
+      //
 
       // Rewrite tags and rules should always be added.
       add_action('init', array('WPChaosSearch', 'handle_rewrite_rules'));
