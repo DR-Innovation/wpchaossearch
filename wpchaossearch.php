@@ -235,57 +235,62 @@ class WPChaosSearch {
       //Get objects per page
       $objects = get_option("wpchaos-searchsize",20);
       //Get max page number
-      $max_page = ceil(WPChaosSearch::get_search_results()->MCM()->TotalCount()/$objects);
+      $search_results = WPChaosSearch::get_search_results();
+      if($search_results) {
+        $max_page = ceil($search_results->MCM()->TotalCount()/$objects);
 
-      //set title and meta
-      global $wp_query;
-      $wp_query->queried_object->post_title = sprintf(__('%s about %s','wpchaossearch'),get_bloginfo('title'),WPChaosSearch::get_search_var(WPChaosSearch::QUERY_KEY_FREETEXT, 'esc_html'));
+        //set title and meta
+        global $wp_query;
+        $wp_query->queried_object->post_title = sprintf(__('%s about %s','wpchaossearch'),get_bloginfo('title'),WPChaosSearch::get_search_var(WPChaosSearch::QUERY_KEY_FREETEXT, 'esc_html'));
 
-      add_filter('wpchaos-head-meta',function($metadatas) use($wp_query) {
-        $metadatas['og:title']['content'] = $wp_query->queried_object->post_title;
-        return $metadatas;
-      });
+        add_filter('wpchaos-head-meta',function($metadatas) use($wp_query) {
+          $metadatas['og:title']['content'] = $wp_query->queried_object->post_title;
+          return $metadatas;
+        });
 
-      //Remove meta and add a dynamic ones for better seo
-      remove_action('wp_head', 'rel_canonical');
-      remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10,0);
+        //Remove meta and add a dynamic ones for better seo
+        remove_action('wp_head', 'rel_canonical');
+        remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10,0);
 
-      add_action('wp_head', function() {
-        $link = WPChaosSearch::generate_pretty_search_url(array(
-          WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED => null,
-        ));
-      });
+        add_action('wp_head', function() {
+          $link = WPChaosSearch::generate_pretty_search_url(array(
+            WPChaosSearch::QUERY_KEY_ONLY_PUBLISHED => null,
+          ));
+        });
 
-      add_action('wp_head', function() {
-        $link = WPChaosSearch::generate_pretty_search_url(array(
-          WPChaosSearch::QUERY_KEY_VIEW => null,
-        ));
-        echo '<link rel="canonical" href="'.$link.'" />'."\n";
-      });
+        add_action('wp_head', function() {
+          $link = WPChaosSearch::generate_pretty_search_url(array(
+            WPChaosSearch::QUERY_KEY_VIEW => null,
+          ));
+          echo '<link rel="canonical" href="'.$link.'" />'."\n";
+        });
 
-      add_action('wp_head', function() use($page) {
-        $link = WPChaosSearch::generate_pretty_search_url(array(
-          WPChaosSearch::QUERY_KEY_PAGE => null,
-        ));
-        echo '<link rel="start" href="'.$link.'" />'."\n";
-      });
-
-      if($page > 1) {
         add_action('wp_head', function() use($page) {
           $link = WPChaosSearch::generate_pretty_search_url(array(
-            WPChaosSearch::QUERY_KEY_PAGE => ($page-1 != 1 ? $page-1 : null),
+            WPChaosSearch::QUERY_KEY_PAGE => null,
           ));
-          echo '<link rel="prev" href="'.$link.'" />'."\n";
+          echo '<link rel="start" href="'.$link.'" />'."\n";
         });
-      }
 
-      if($page < $max_page) {
-        add_action('wp_head', function() use($page) {
-          $link = WPChaosSearch::generate_pretty_search_url(array(
-            WPChaosSearch::QUERY_KEY_PAGE => $page+1,
-          ));
-          echo '<link rel="next" href="'.$link.'" />'."\n";
-        });
+        if($page > 1) {
+          add_action('wp_head', function() use($page) {
+            $link = WPChaosSearch::generate_pretty_search_url(array(
+              WPChaosSearch::QUERY_KEY_PAGE => ($page-1 != 1 ? $page-1 : null),
+            ));
+            echo '<link rel="prev" href="'.$link.'" />'."\n";
+          });
+        }
+
+        if($page < $max_page) {
+          add_action('wp_head', function() use($page) {
+            $link = WPChaosSearch::generate_pretty_search_url(array(
+              WPChaosSearch::QUERY_KEY_PAGE => $page+1,
+            ));
+            echo '<link rel="next" href="'.$link.'" />'."\n";
+          });
+        }
+      } else {
+        // TODO: Figure out how to present that we got no results ...
       }
 
       //Look in theme dir and include if found
@@ -662,7 +667,12 @@ class WPChaosSearch {
     if(!$objects) {
       throw new Exception('Missing the setting of many items to show per page');
     }
-    $max_page = ceil(self::get_search_results()->MCM()->TotalCount() / $objects);
+    $search_results = self::get_search_results();
+    if($search_results) {
+      $max_page = ceil($search_results->MCM()->TotalCount() / $objects);
+    } else {
+      $max_page = 0;
+    }
 
     $result = $before;
 
