@@ -674,7 +674,10 @@ class WPChaosSearch {
     //Get objects per page
     $objects = get_option("wpchaos-searchsize", 20);
     //Get max page number
-    $max_page = ceil(self::get_search_results()->MCM()->TotalCount()/$objects);
+    if(!$objects) {
+      throw new Exception('Missing the setting of many items to show per page');
+    }
+    $max_page = ceil(self::get_search_results()->MCM()->TotalCount() / $objects);
 
     $result = $before;
 
