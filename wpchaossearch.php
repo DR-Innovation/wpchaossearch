@@ -33,6 +33,7 @@ class WPChaosSearch {
   const FILTER_PREPARE_RESULTS = 'wpchaossearch-prepare';
 
   public static $search_results;
+  public static $search_error;
 
   /**
    * Plugins depending on
@@ -333,18 +334,24 @@ class WPChaosSearch {
     $search_vars = self::get_search_vars();
     $query = apply_filters('wpchaos-solr-query', $query, $search_vars);
 
-    self::set_search_results(WPChaosClient::instance()->Object()->Get(
-      $query,	// Search query
-      $sort,	// Sort
-      $accesspoint,	// AccessPoint given by settings.
-      $pageindex,		// pageIndex
-      $pagesize,		// pageSize
-      true,	// includeMetadata
-      true,	// includeFiles
-      true,	// includeObjectRelations
-      true, 	// includeAccessPoints
-      true 	// POST instead of GET
-    ));
+    $throw_errors_before = WPChaosClient::set_throw_errors(true);
+    try {
+      self::set_search_results(WPChaosClient::instance()->Object()->Get(
+        $query,	// Search query
+        $sort,	// Sort
+        $accesspoint,	// AccessPoint given by settings.
+        $pageindex,		// pageIndex
+        $pagesize,		// pageSize
+        true,	// includeMetadata
+        true,	// includeFiles
+        true,	// includeObjectRelations
+        true, 	// includeAccessPoints
+        true 	// POST instead of GET
+      ));
+    } catch(\Exception $e) {
+      self::set_search_error($e);
+    }
+    WPChaosClient::set_throw_errors($throw_errors_before);
   }
 
   public static function generate_facet($facet_field, $exclude_query_var = null) {
@@ -610,6 +617,15 @@ class WPChaosSearch {
    */
   public static function set_search_results($search_results) {
     self::$search_results = apply_filters(self::FILTER_PREPARE_RESULTS,$search_results);
+  }
+
+  /**
+   * Set object for search error
+   * @param Throwable $e the error that was thrown.
+   * @return void
+   */
+  public static function set_search_error($e) {
+    self::$search_error = $e;
   }
 
   /**
