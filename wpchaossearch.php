@@ -348,14 +348,20 @@ class WPChaosSearch {
       unset($variables[$exclude_query_var]);
     }
     $query = apply_filters('wpchaos-solr-query', "", $variables);
-    $response = WPChaosClient::instance()->Index()->Search("field:" . $facet_field, $query);
-    $results = $response->Index()->Results();
-    $facets = $results[0]->FacetFieldsResult[0]->Facets;
-    // Process the result from CHAOS.
+    $previous_throw_errors = WPChaosClient::set_throw_errors(true);
     $result = array();
-    foreach($facets as $facet) {
-      $result[$facet->Value] = $facet->Count;
+    try {
+      $response = WPChaosClient::instance()->Index()->Search("field:" . $facet_field, $query);
+      $results = $response->Index()->Results();
+      $facets = $results[0]->FacetFieldsResult[0]->Facets;
+      // Process the result from CHAOS.
+      foreach($facets as $facet) {
+        $result[$facet->Value] = $facet->Count;
+      }
+    } catch(\Exception $e) {
+      error_log($e->getMessage());
     }
+    WPChaosClient::set_throw_errors($previous_throw_errors);
     return $result;
   }
 
