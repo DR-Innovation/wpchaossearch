@@ -325,29 +325,8 @@ class WPChaosSearch {
 
     $sort = apply_filters('wpchaos-solr-sort', $sort, self::get_search_vars());
 
-    // Search settings with AND operator, which means that the search results must contain all the words.
-    // Ex. Dronning Margrethe is Dronning AND Margrethe.
-    // Search string is splitted by spaces.
     $search_vars = self::get_search_vars();
-    $search = explode(' ', $search_vars['text']);
-    $arr_query = array();
-    // Loops through every search word and adds the query to an array.
-    foreach ($search as $s) {
-      $search_vars['text'] = $s;
-      $arr_query[] = '(' . apply_filters('wpchaos-solr-query', $query, $search_vars) . ')';
-    }
-
-    // Save the search to a csv for further analyzing
-    if (count($args['date_range']) > 0) {
-      $dates = $args['date_range'];
-      // Log the date search to a file
-      $entry = ensure_ymd_format($dates[0]) . ';'. ensure_ymd_format($dates[1]);
-      $path = dirname(__FILE__) . '/date-searches.csv';
-      file_put_contents($path, PHP_EOL . $entry, FILE_APPEND);
-    }
-
-    // Implodes with AND between every query from the loop.
-    $query = implode(' AND ', $arr_query);
+    $query = apply_filters('wpchaos-solr-query', $query, $search_vars);
 
     self::set_search_results(WPChaosClient::instance()->Object()->Get(
       $query,	// Search query
