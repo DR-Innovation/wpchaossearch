@@ -186,7 +186,7 @@ class WPChaosSearch {
       }
     }
 
-    if (!empty($variables['text']) && count($variables['text']) > 100) {
+    if (!empty($variables['text']) && is_string($variables['text']) && strlen($variables['text']) > 100) {
       $variables['text'] = substr($variables['text'], 0, 100); // To make sure the URL does not exceed maximum
     }
     return $variables;
@@ -233,7 +233,7 @@ class WPChaosSearch {
       $this->generate_searchresults();
 
       //Get current page number
-      $page = WPChaosSearch::get_search_var(WPChaosSearch::QUERY_KEY_PAGE, false, true, 1);
+      $page = (int) WPChaosSearch::get_search_var(WPChaosSearch::QUERY_KEY_PAGE, false, true, 1);
       //Get objects per page
       $objects = get_option("wpchaos-searchsize",20);
       //Get max page number
