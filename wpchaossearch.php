@@ -315,7 +315,7 @@ class WPChaosSearch {
     // Grab args or defaults
     $args = wp_parse_args($args, array(
       'query' => "",
-      'pageindex' => self::get_search_var(self::QUERY_KEY_PAGE, 'intval')-1,
+      'pageindex' => intval(self::get_search_var(self::QUERY_KEY_PAGE))-1,
       'pagesize' => get_option("wpchaos-searchsize",20),
       'sort' => self::get_search_var(self::QUERY_KEY_SORT),
       'view_unpublish' => self::get_search_var(self::QUERY_KEY_ONLY_PUBLISHED),
